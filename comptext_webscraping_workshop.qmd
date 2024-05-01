@@ -1,0 +1,1123 @@
+---
+title: "A Short Intro to Web Scraping (in R)"
+author: "Johannes B. Gruber"
+date: 2024-05-02
+format:
+  revealjs:
+    smaller: true
+    scrollable: true
+    code-line-numbers: true
+    slide-number: c/t
+    logo: media/comptext_logo.png
+    self-contained: true
+execute:
+  cache: true
+  echo: true
+highlight-style: pygments
+bibliography: references.bib
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+## The Plan for Today
+
+:::: {.columns}
+
+::: {.column width="60%"}
+- Learn what Web Scraping is
+- Get an understanding of the web
+- Learn how to identify patterns you can use for scraping
+- Get an overview of relevant tools
+- Learn about legal and ethical concerns (and myths)
+:::
+
+::: {.column width="30%" }
+![](https://images.unsplash.com/photo-1567361809214-b97d828071d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80)
+[Louis Hansel](https://unsplash.com/@louishansel) via unsplash.com
+:::
+
+::::
+
+<!-- This is a comment. You can leave them here to take notes linked to the slides. -->
+
+## Who am I?
+
+:::: {.columns}
+
+::: {.column width="60%"}
+- PostDoc at Department of Language, Literature and Communication at Vrije Universiteit Amsterdam and University of Amsterdam
+- Interested in:
+  - Computational Social Science
+  - Automated Text Analysis
+  - Hybrid Media Systems and Information Flows
+  - Protest and Democracy
+- Experience:
+  - R user for 9 years
+  - R package developer for 7 years
+  - Worked on several packages for text analysis, API access and web scraping (quanteda.textmodels, LexisNexisTools, paperboy, traktok, rollama, amcat4-r, and more)
+:::
+
+::: {.column width="40%"}
+![](https://johannesbgruber.eu/img/JBGruber.jpg)
+
+Contact: 
+
+- [j.b.gruber@vu.nl](mailto:j.b.gruber@vu.nl) 
+- [\@jbgruber.bsky.social](https://bsky.app/profile/jbgruber.bsky.socialr)
+- [\@JohannesBGruber](https://twitter.com/JohannesBGruber)
+:::
+
+::::
+
+## Who are you?
+
+:::: {.columns}
+
+::: {.column width="60%"}
+- What is your name?
+- What are your research interests?
+- What is your experience with:
+  - R
+  - HTML
+  - web scraping
+- Why are you taking this course?
+- Do you have specific plans that include web scraping?
+- What operating system are you using?
+:::
+
+::: {.column width="40%"}
+![](https://images.unsplash.com/photo-1554497342-902a4f8da8ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80)
+:::
+
+::::
+
+# What is Web Scraping & should You Learn/Use it?
+## What is Web Scraping
+
+:::: {.columns}
+
+::: {.column width="50%"}
+- Used when other means are unavailable
+- Scrape the (unstructured) Data
+- A web-scraper is a program (or robot) that:
+  - goes to a web page
+  - downloads its content
+  - extracts data from the content
+  - then saves the data to a file or a database
+- Unfortunately no one-size-fits-all solution
+  - Lots of different techniques, tools, tricks
+  - Websites change (some more frequently than others)
+  - Some websites make it hard for you (by accident or on purpose!)
+:::
+
+::: {.column width="50%"}
+![Image Source: daveberesford.co.uk](https://daveberesford.co.uk/wp-content/uploads/2019/02/data-scraping-960x594.png)
+
+![](media/web-mining.png){.fragment .absolute top="20%" width="50%"}
+
+![](media/web-scraping.jpg){.fragment .absolute  top="20%"}
+
+:::
+::::
+
+
+## Web Scraping: A Three-Step Process
+
+1. Send an HTTP request to the webpage -> server responds to the request by returning (HTML) content
+2. Parse the HTML content -> extract the information you want from the nested structure of (HTML) code
+3. Wrangle the data into a useful format
+
+![Original Image Source: prowebscraper.com](media/web_scraping_steps.png)
+
+
+## Why Should You Learn Web Scraping?
+
+:::: {.columns}
+
+::: {.column width="67%"}
+- The internet is a data gold mine!
+- Data were not created for research, but are often traces of what people are *actually* doing on the internet
+- Reproducible and renewable data collection (e.g., rehydrate data that is copyrighted)
+- Web Scraping let's you automate data retrieval (as opposed to using tedious copy & past on some web site)
+- It's one of the most fun tasks to learn R and programming!
+  - It's engaging and satisfying to find repeating patterns that you can employ to structure data (every website becomes a little puzzle)
+  - It touches on many important computational skills
+  - The return is good data to further your career (unlike sudokus or video games)
+:::
+
+::: {.column width="30%"}
+![](media/treasure.jpg)
+:::
+::::
+
+# What are HTML and CSS
+## What is HTML
+- HTML (HyperText Markup Language) is the standard markup language for documents designed to be displayed in a web browser
+- Contains the raw data (text, URLs to pictures and videos) plus defines the layout and some of the styling of text
+
+![](media/html_element.svg)
+
+Image Source: [Wikipedia.org](https://en.wikipedia.org/wiki/HTML_element)
+
+## Example: Simple
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Code:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+</head>
+<body>
+    <p>This is the body of the text.</p>
+</body>
+</html>
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/html-1.png)
+:::
+::::
+
+## Example: With headline and author
+
+:::: {.columns}
+::: {.column width="50%"}
+Code:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+</head>
+<body>
+    <h1>My Headline</h1>
+    <p class="author" href="https://www.johannesbgruber.eu/">Me</p>
+    <p>This is the body of the text.</p>
+</body>
+</html>
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/html-2.png)
+:::
+::::
+
+## Example: With some data
+
+:::: {.columns}
+::: {.column width="50%" height="50%"}
+Code:
+
+```{html}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+</head>
+<body>
+    <h1>My Headline</h1>
+    <p class="author">Me</p>
+    <p>This is the body of the text.</p>
+    <p>Consider this data:</p>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+        </tr>
+        <tr>
+            <td>John</td>
+            <td>25</td>
+        </tr>
+        <tr>
+            <td>Mary</td>
+            <td>26</td>
+        </tr>
+    </table>
+</body>
+</html>
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/html-3.png)
+:::
+::::
+
+## Example: With an image
+
+:::: {.columns}
+::: {.column width="50%"}
+Code:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+</head>
+<body>
+    <h1>My Headline</h1>
+    <p class="author">Me</p>
+    <p>This is the body of the text.</p>
+    <p>Consider this image:</p>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/About_The_Dog.jpg/640px-About_The_Dog.jpg" alt="About The Dog."></img>
+</body>
+</html>
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/html-4.png)
+:::
+::::
+
+## Example: With a link
+
+:::: {.columns}
+::: {.column width="50%"}
+Code:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+</head>
+<body>
+    <h1>My Headline</h1>
+    <a href="https://www.johannesbgruber.eu/">
+      <p class="author">Me</p>
+    </a>
+    <p>This is the body of the text.</p>
+</body>
+</html>
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/html-4.png)
+:::
+::::
+
+## What is CSS
+
+- CSS (Cascading Style Sheets) is very often used in addition to HTML to control the presentation of a document
+- Designed to enable the separation of *content* from things concerning the *look*, such as layout, colours, and fonts.
+- The reason it is interesting for web scraping is that **certain information often get the same styling**
+
+## Example: CSS
+
+:::: {.columns}
+::: {.column width="50%"}
+HTML:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Simple HTML Page</title>
+    <link rel="stylesheet" type="text/css" href="example.css">
+</head>
+<body>
+  <h1 class="headline">My Headline</h1>
+  <p class="author">Me</p>
+  <div class="content">
+    <p>This is the body of the text.</p>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/About_The_Dog.jpg/640px-About_The_Dog.jpg" alt="About The Dog.">
+    <p>Consider this data:</p>
+    <table>
+      <tr class="top-row">
+          <th>Name</th>
+          <th>Age</th>
+      </tr>
+      <tr>
+          <td>John</td>
+          <td>25</td>
+      </tr>
+      <tr>
+          <td>Mary</td>
+          <td>26</td>
+      </tr>
+    </table>
+  </div>
+</body>
+</body>
+</html>
+
+```
+
+CSS:
+
+```css
+/* CSS file */
+
+.headline {
+  color: red;
+}
+
+.author {
+  color: grey;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.top-row {
+  background-color: lightgrey;
+}
+
+.content img {
+  border: 2px solid black;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+```
+:::
+
+::: {.column width="50%"}
+Browser View:
+
+![](media/css.png)
+:::
+::::
+
+## Execises: HTML and CSS
+
+1. Add another image and another paragraph to `data/example.html` and display it in your browser
+2. Add a second level headline to the page
+3. Add another image to the page
+
+# HTMl and CSS in Web Scraping
+## Using HTML tags:
+
+You can select HTML elements by their tags
+
+```{r}
+library(rvest)
+read_html("data/example.html") |>  # retrieve content
+  html_elements("p") |>            # select content via css selector
+  html_text2()                     # extract data you want
+```
+
+- to select them, **tags** are written without the `<>`
+- in theory, arbitrary tags are possible, but commonly people use `<p>` (paragraph), `<br>` (line break), `<h1>`, `<h2>`, `<h3>`, ... (first, second, third, ... level headline), `<b>` (bold), `<i>` (italic), `<img>` (image), `<a>` (hyperlink), and a couple more.
+
+## Using attributes
+
+You can select elements by an attribute, including the class:
+
+```{r}
+read_html("data/example.html") |> 
+  html_element("[class=\"headline\"]") |> 
+  html_text()
+```
+
+For `class`, there is also a shorthand:
+
+```{r}
+read_html("data/example.html") |> 
+  html_element(".headline") |> 
+  html_text()
+```
+
+Another important shorthand is `#`, which selects the `id` attribute:
+
+```{r}
+read_html("data/example.html") |> 
+  html_element("#table-1") |> 
+  html_table()                     # html_table tries to re-assemble tables 
+```
+
+## Extracting attributes
+
+Instead of selecting by attribute, you can also extract one or all attributes:
+
+```{r}
+read_html("data/example.html") |> 
+  html_elements("a") |> 
+  html_attr("href")
+```
+
+```{r}
+read_html("data/example.html") |> 
+  html_elements("a") |> 
+  html_attrs()
+```
+
+## Chaining selectors
+
+If there is more than one element that fits your selector, but you only want one of them, see if you can make your selection more specific by chaining selectors with `>` (for the immediate next one) or an empty space (for any children of an element):
+
+```{r}
+read_html("data/example.html") |> 
+  html_elements(".author>a") |> 
+  html_attr("href")
+```
+
+```{r}
+read_html("data/example.html") |> 
+  html_elements(".author a") |> 
+  html_attr("href")
+```
+
+Tip: there is also no rule against doing this instead:
+
+```{r}
+read_html("data/example.html") |> 
+  html_elements(".author") |> 
+  html_elements("a") |> 
+  html_attr("href")
+```
+
+## Common Selectors
+
+There are quite a lot of [CSS selectors](https://www.w3schools.com/cssref/css_selectors.asp), but often you can stick to just a few:
+
+| selector      | example           | Selects                                                |
+|---------------|-------------------|--------------------------------------------------------|
+| element/tag   | `table`           | **all** `<table>` elements                             |
+| class         | `.someTable`      | **all** elements with `class="someTable"`              |
+| id            | `#table-1`        | **unique** element with `id="table-1"`                 |
+| element.class | `tr.headerRow`    | **all** `<tr>` elements with the `someTable` class     |
+| element.class | `tr.headerRow`    | **all** `<tr>` elements with the `someTable` class     |
+| class1.class2 | `.someTable.blue` | **all** elements with the `someTable` AND `blue` class |
+| class1 > tag  | `.table-1 > tr`   | **all** elements with `tr` with `.table-1` as parent   |
+| class1 + tag  | `.top-row + tr`   | **first** elements with `tr` following `.top-row`      |
+
+## Family Relations
+
+Each html tag can contain other tags.
+To keep track of the relations we speak of ancestors, descendants, parents, children and siblings.
+
+```{html}
+#| linecode-line-numbers: true
+#| code-line-numbers: "1-26|2-14|3-10"
+<book>
+  <chapter>
+    <section>
+      <subsection>
+        This is a subsection.
+      </subsection>
+      <subsection>
+        This is another subsection.
+      </subsection>
+    </section>
+    <section>
+      This is a section.
+    </section>
+  </chapter>
+  <chapter>
+    <section>
+      This is a section.
+    </section>
+    <section>
+      This is a section.
+    </section>
+  </chapter>
+  <chapter>
+    This is a chapter without sections.
+  </chapter>
+</book>
+```
+
+
+## Exercises: HTML selectors
+
+1. Practice finding the right selector with the CSS Diner game (<https://flukeout.github.io/>)
+1. Consider the toy HTML example below. Which selectors do you need to put into `html_elements()` (which extracts all elements matching the selector) to extract the information
+
+
+```{r}
+#| eval: false
+library(rvest)
+webpage <- "<html>
+<body>
+  <h1>Computational Research in the Post-API Age</h1>
+  <div class='author'>Deen Freelon</div>
+  <div>Keywords:
+    <ul>
+      <li>API</li>
+      <li>computational</li>
+      <li>Facebook</li>
+    </ul>
+  </div>
+  <div class='text'>
+    <p>Three pieces of advice on whether and how to scrape from Dan Freelon</p>
+  </div>
+  
+  <ol class='advice'>
+    <li id='one'> use authorized methods whenever possible </li>
+    <li id='two'> do not confuse terms of service compliance with data protection </li>
+    <li id='three'> understand the risks of violating terms of service </li>
+  </ol>
+
+</body>
+</html>" |> 
+  read_html()
+```
+
+```{r}
+#| eval: false
+#| echo: false
+# the headline
+headline <- html_elements(webpage, "")
+headline
+# the author
+author <- html_elements(webpage, "")
+author
+# the ordered list
+ordered_list <- html_elements(webpage, "")
+ordered_list
+# all bullet points
+bullet_points <- html_elements(webpage, "")
+bullet_points
+# bullet points in unordered list
+bullet_points_unordered <- html_elements(webpage, "")
+bullet_points_unordered
+# elements in ordered list
+bullet_points_ordered <- html_elements(webpage, "")
+bullet_points_ordered
+# third bullet point in ordered list
+bullet_point_three_ordered <- html_elements(webpage, "")
+bullet_point_three_ordered
+```
+
+# Scraping Static Web Pages
+## Example: World Happiness Report
+### Use your Browser to Scout
+
+:::: {.columns}
+
+::: {.column width="45%"}
+[
+  ![](media/en.wikipedia.org_wiki_World_Happiness_Report.png)
+](https://en.wikipedia.org/w/index.php?title=World_Happiness_Report&oldid=1165407285)
+![](media/en.wikipedia.org_wiki_World_Happiness_Report_table.png)
+:::
+
+::: {.column width="50%" }
+![](media/en.wikipedia.org_wiki_World_Happiness_Report_code.png)
+:::
+
+::::
+
+### Use your Browser's `Inspect` tool
+
+![](media/inspect-view.png)
+
+*Note: Might not be available on all browsers; use Chromium-based or Firefox.*
+
+### Use `rvest` to scrape
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+library(rvest)
+library(tidyverse)
+
+# 1. Request & collect raw html
+html <- read_html("https://en.wikipedia.org/w/index.php?title=World_Happiness_Report&oldid=1165407285")
+
+# 2. Parse
+happy_table <- html |> 
+  html_elements(".wikitable") |> # select the right element
+  html_table() |>                # special function for tables
+  pluck(3)                       # select the third table
+
+# 3. No wrangling necessary
+happy_table
+```
+:::
+
+::: {.column width="50%" }
+```{r}
+## Plot relationship wealth and life expectancy
+ggplot(happy_table, aes(x = `GDP per capita`, y = `Healthy life expectancy`)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+:::
+::::
+
+## Exercises: Static Web Pages 1
+
+1. Get the table with 2023 opinion polling for the next United Kingdom general election from <https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election>
+2. Wrangle and plot the data opinion polls
+
+## Example: UK prime ministers on Wikipedia
+### Use your Browser to Scout
+
+[
+  ![](media/list-pms.png)
+](https://en.wikipedia.org/w/index.php?title=List_of_prime_ministers_of_the_United_Kingdom&oldid=1166167337)
+
+### Use `rvest` to scrape
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+# 1. Request & collect raw html
+html <- read_html("https://en.wikipedia.org/w/index.php?title=List_of_prime_ministers_of_the_United_Kingdom&oldid=1166167337") # I'm using an older version of the site since some just changed it
+
+# 2. Parse
+pm_table <- html |> 
+  html_element(".wikitable:contains('List of prime ministers')") |>
+  html_table() |> 
+  as_tibble(.name_repair = "unique") |> 
+  filter(!duplicated(`Prime ministerOffice(Lifespan)`))
+
+# 3. No wrangling necessary
+pm_table
+```
+:::
+
+::: {.column width="50%" }
+
+```{html}
+#| eval: false
+<td rowspan="4">
+  <span class="anchor" id="18th_century"></span>
+   <b>
+     <a href="/wiki/Robert_Walpole" title="Robert Walpole">Robert Walpole</a>
+   </b>
+   <sup id="cite_ref-FOOTNOTEEccleshallWalker20021,_5EnglefieldSeatonWhite19951–5PrydeGreenwayPorterRoy199645–46_28-0" class="reference">
+     <a href="#cite_note-FOOTNOTEEccleshallWalker20021,_5EnglefieldSeatonWhite19951–5PrydeGreenwayPorterRoy199645–46-28">[27]</a>
+   </sup>
+   <br>
+   <span style="font-size:85%;">MP for <a href="/wiki/King%27s_Lynn_(UK_Parliament_constituency)" title="King's Lynn (UK Parliament constituency)">King's Lynn</a>
+   <br>(1676–1745)
+  </span>
+</td>
+```
+
+```{r}
+links <- html |> 
+  html_elements(".wikitable:contains('List of prime ministers') b a") |>
+  html_attr("href")
+title <- html |> 
+  html_elements(".wikitable:contains('List of prime ministers') b a") |>
+  html_text()
+tibble(name = title, link = links)
+```
+
+Note: these are relative links that need to be combined with *https://en.wikipedia.org/* to work
+:::
+::::
+
+
+## Exercises: Static Web Pages 2
+
+1. For extracting text, `rvest` has two functions: `html_text` and `html_text2`. Explain the difference. You can test your explanation with the example html below.
+
+```{r}
+html <- "<p>This is some text
+         some more text</p><p>A new paragraph!</p>
+         <p>Quick Question, is web scraping:
+
+         a) fun
+         b) tedious
+         c) I'm not sure yet!</p>" |> 
+  read_html()
+```
+
+2. How could you convert the `links` objects so that it contains actual URLs?
+3. How could you add the links we extracted above to the `pm_table` to keep everything together?
+
+# Other Techniques
+## APIs
+
+- An Application Programming Interface (API) is a way for two computer programs to speak to each other
+- Commonly used to distribute data or do many other things (e.g., the defunct Twitter and Facebook APIs, NYT and Guardian APIs, MediaCloud API)
+- Good way to access APIs: `httr2`
+
+### API example: Guardian API
+
+If you want to follow along:
+
+- get your key: <https://bonobo.capi.gutools.co.uk/register/developer>
+- look at documentation: <https://open-platform.theguardian.com/documentation/>
+
+```{r}
+library(httr2)
+library(tidyverse, warn.conflicts = FALSE)
+req <- request("https://content.guardianapis.com") |>  # start the request with the base URL
+  req_url_path("search") |>                            # navigate to the endpoint you want to access
+  req_method("GET") |>                                 # specify the method
+  req_timeout(seconds = 60) |>                         # how long to wait for a response
+  req_headers("User-Agent" = "httr2 guardian test") |> # specify request headers
+  # req_body_json() |>                                 # since this is a GET request the body stays empty
+  req_url_query(                                       # instead the query is added to the URL
+    q = "parliament AND debate",
+    "show-blocks" = "all"
+  ) |>
+  req_url_query(                                       # in this case, the API key is also added to the query
+    "api-key" = "d187828f-9c6a-4c29-afd4-dbd43e116965"             # but httr2 also has req_auth_* functions for other
+  )                                                    # authentication procedures
+print(req)
+```
+
+Nothing is done until you perform the request:
+
+```{r}
+resp <- req |> 
+  req_perform()
+```
+
+Then you need to parse the response:
+
+```{r}
+parse_response <- function(resp) {
+  # make sure response is valid
+  if (resp_content_type(resp) != "application/json") {
+    stop("Request was not succesful!")
+  }
+  
+  # extract articles
+  results <- resp_body_json(resp) |> 
+    pluck("response", "results")
+  
+  # parse into data.frame
+  map(results, function(res) {
+    tibble(
+      id = res$id,
+      type = res$type,
+      time = lubridate::ymd_hms(res$webPublicationDate),
+      headline = res$webTitle,
+      text = rvest::read_html(pluck(res, "blocks", "body", 1, "bodyHtml")) |> rvest::html_text2()
+    )
+  }) |> 
+    bind_rows()
+  
+}
+parse_response(resp)
+```
+
+## Exercises APIs
+
+This call retrieves the first 10 articles that match the query:
+
+```{r}
+#| eval: false
+library(httr2)
+response <- request("https://content.guardianapis.com") |>  # start the request with the base URL
+  req_url_path("search") |>                            # navigate to the endpoint you want to access
+  req_method("GET") |>                                 # specify the method
+  req_timeout(seconds = 60) |>                         # how long to wait for a response
+  req_headers("User-Agent" = "httr2 guardian test") |> # specify request headers
+  # req_body_json() |>                                 # since this is a GET request the body stays empty
+  req_url_query(                                       # instead the query is added to the URL
+    q = "parliament AND debate",
+    "show-blocks" = "all"
+  ) |>
+  req_url_query(                                       # in this case, the API key is also added to the query
+    "api-key" = "d187828f-9c6a-4c29-afd4-dbd43e116965" # but httr2 also has req_auth_* functions for other
+  ) |> 
+  req_perform() |> 
+  resp_body_json()
+
+View(response$response)
+```
+
+1. How can you change the call to get 25 articles instead
+2. The call delivers the first page. How can you get to the second one?
+
+## Special Requests
+
+- Some websites limit requests
+- When you run `read_html` from `rvest`, it uses a default request that fits most of the time, but not always:
+
+```{r}
+#| error: true
+#| class: fragment
+html <- read_html("https://www.icahdq.org/mpage/ICA23-Program")
+```
+
+To interpret HTTP errors, you can use this handy function:
+
+```{r}
+error_cat <- function(error) {
+  link <- paste0("https://http.cat/images/", error, ".jpg")
+  knitr::include_graphics(link)
+}
+error_cat(403)
+```
+
+So what to do next?
+
+- Scope the Network tab
+- Translate Curl
+- Build request in R
+
+
+### Translate the `cURL` call
+
+```{r}
+curl_translate("curl 'https://whova.com/xems/apis/event_webpage/agenda/public/get_agendas/?event_id=JcQAdK91J0qLUtNxOYUVWFMTUuQgIg3Xj6VIeeyXVR4%3D' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: en-GB,en-US;q=0.9,en;q=0.8' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Connection: keep-alive' \
+  -H 'Pragma: no-cache' \
+  -H 'Referer: https://whova.com/embedded/event/JcQAdK91J0qLUtNxOYUVWFMTUuQgIg3Xj6VIeeyXVR4%3D/' \
+  -H 'Sec-Fetch-Dest: empty' \
+  -H 'Sec-Fetch-Mode: cors' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36' \
+  -H 'sec-ch-ua: \"Chromium\";v=\"115\", \"Not/A)Brand\";v=\"99\"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: \"Linux\"' \
+  --compressed")
+```
+
+### Make request in R
+
+```{r}
+ica_programme_data <- request("https://whova.com/xems/apis/event_webpage/agenda/public/get_agendas/?event_id=JcQAdK91J0qLUtNxOYUVWFMTUuQgIg3Xj6VIeeyXVR4%3D") |> 
+  req_headers(
+    Accept = "application/json, text/plain, */*",
+    `Accept-Language` = "en-GB,en-US;q=0.9,en;q=0.8",
+    `Cache-Control` = "no-cache",
+    Connection = "keep-alive",
+    Pragma = "no-cache",
+    Referer = "https://whova.com/embedded/event/JcQAdK91J0qLUtNxOYUVWFMTUuQgIg3Xj6VIeeyXVR4%3D/",
+    `Sec-Fetch-Dest` = "empty",
+    `Sec-Fetch-Mode` = "cors",
+    `Sec-Fetch-Site` = "same-origin",
+    `User-Agent` = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    `sec-ch-ua` = "\"Chromium\";v=115\", \"Not/A)Brand\";v=\"99",
+    `sec-ch-ua-mobile` = "?0",
+    `sec-ch-ua-platform` = "\"Linux\"",
+  ) |> 
+  req_perform() |> 
+  resp_body_json()
+```
+
+:::{.fragment}
+```{r}
+object.size(ica_programme_data) |> 
+  format("MB")
+```
+
+
+It worked!
+
+![](https://media2.giphy.com/media/Q8IYWnnogTYM5T6Yo0/giphy.gif?cid=ecf05e47a37ontzij6ljf2ztej9d9bytu5qlvgxt8xm74ywq&ep=v1_gifs_search&rid=giphy.gif&ct=g)
+:::
+
+
+## Special Requests: Behind Paywall
+
+Let's get this [cool data journalism article](https://www.zeit.de/mobilitaet/2024-04/deutschlandticket-klimaschutz-oeffentliche-verkehrsmittel-autos-verkehrswende).
+
+```{r}
+html <- read_html("https://www.zeit.de/mobilitaet/2024-04/deutschlandticket-klimaschutz-oeffentliche-verkehrsmittel-autos-verkehrswende")
+html |> 
+  html_elements(".article-body p") |> 
+  html_text2()
+```
+
+:::{.fragment}
+:thinking: Wait, that's only the first two paragraphs!
+:::
+
+## Special Requests: ~~Behind Paywall~~ Cookies!
+
+```{r}
+library(cookiemonster)
+add_cookies("cookies.txt")
+```
+
+```{r}
+html <- request("https://www.zeit.de/mobilitaet/2024-04/deutschlandticket-klimaschutz-oeffentliche-verkehrsmittel-autos-verkehrswende") |> # start a request
+  req_options(cookie = get_cookies("zeit.de", as = "string")) |> # add cookies to be sent with it
+  req_perform() |> 
+  resp_body_html() # extract html from response
+
+html |> 
+  html_elements(".article-body p") |> 
+  html_text2()
+```
+
+## Interactive Website
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+static <- read_html("https://www.google.de/maps/dir/Armadale+St,+Glasgow,+UK/Lilybank+House,+Glasgow,+UK/@55.8626667,-4.2712892,14z/data=!3m1!4b1!4m14!4m13!1m5!1m1!1s0x48884155c8eadf03:0x8f0f8905398fcf2!2m2!1d-4.2163615!2d55.8616765!1m5!1m1!1s0x488845cddf3cffdb:0x7648f9416130bcd5!2m2!1d-4.2904601!2d55.8740368!3e0?entry=ttu")
+static |> 
+  html_elements(".MespJc") |> 
+  html_text2()
+```
+:::
+
+::: {.column width="50%" }
+
+![google maps commute](media/maps.png)
+:::
+::::
+
+## Interactive Website & Browser Automation
+
+- The new `read_html_live` from `rvest` solves this by emulating a browser:
+
+```{r}
+# loads a real web browser
+sess <- read_html_live("https://www.google.de/maps/dir/Armadale+St,+Glasgow,+UK/Lilybank+House,+Glasgow,+UK/@55.8626667,-4.2712892,14z/data=!3m1!4b1!4m14!4m13!1m5!1m1!1s0x48884155c8eadf03:0x8f0f8905398fcf2!2m2!1d-4.2163615!2d55.8616765!1m5!1m1!1s0x488845cddf3cffdb:0x7648f9416130bcd5!2m2!1d-4.2904601!2d55.8740368!3e0?entry=ttu")
+
+# you can even take a look at what is happening with
+# sess$view()
+# cookies <- sess$session$Network$getCookies()
+# saveRDS(cookies, "data/chromote_cookies.rds")
+cookies <- readRDS("data/chromote_cookies.rds")
+sess$session$Network$setCookies(cookies = cookies$cookies)
+
+# the session behaves like a normal rvest html object
+sess |> 
+  html_elements(".MespJc") |> 
+  html_text2() |> 
+  str_extract(".+?min")
+```
+
+## Some of my other packages that can make your life easier
+### paperboy: get data from news media sites
+
+:::: {.columns}
+
+::: {.column width="70%"}
+```{r}
+paperboy::pb_deliver("https://www.zeit.de/mobilitaet/2024-04/deutschlandticket-klimaschutz-oeffentliche-verkehrsmittel-autos-verkehrswende",
+                     use_cookies = TRUE)
+```
+:::
+
+::: {.column width="25%" }
+
+![](media/paperboy_hex.png)
+:::
+::::
+
+
+
+### traktok: easy access to TikTok data
+
+
+:::: {.columns}
+
+::: {.column width="70%"}
+```{r}
+library(traktok)
+df <- tt_search_hidden("#rstats", max_pages = 2)
+df
+```
+
+```{r}
+tt_videos_hidden(df$video_url[1])
+```
+:::
+
+::: {.column width="25%" }
+
+![](media/traktok_hex.png)
+:::
+::::
+
+
+
+
+# Shameless self-promotion
+
+![ESS](media/ess.png)
+
+<https://essexsummerschool.com/summer-school-facts/courses/ess-2024-course-list/2v-introduction-to-web-scraping-and-data-management-for-social-scientists/>
+
+# Should you use Webscraping?
+## Are you Allowed to use Webscraping?
+
+Web Scraping is not a shady or illegal activity, **but** not all web scraping is unproblematic and the **data** does not become **yours**.
+
+::: {.incremental}
+- Collecting **personal data** of people in the EU might violate GDPR (General Data Protection Regulation)
+  - The GDPR defines personal data as "any information relating to an identified or identifiable natural person." (Art. 4 [GDPR](https://gdpr-info.eu/art-4-gdpr/))
+  - Exceptions
+    - if you get consent from the people whose data it is
+    - personal data processing is legitimate when "necessary for the performance of a task carried out in the public interest" (Art. 6 [GDPR](https://gdpr-info.eu/art-6-gdpr/))
+- Collecting **copyrighted** data
+  - Complicated legal situation
+  - Public facing content is probably okay ([9th circuit ruling](https://www.vice.com/en/article/9kek83/linkedin-data-scraping-lawsuit-shot-down))
+  - "there have been no lawsuits in [...] major western democratic countries stemming from a researcher scraping publicly accessible data from a website for personal or academic use." [@luscombewebscraping2022]
+  - You will probably get in trouble if you distribute the material
+- Honouring Terms of Service and robots.txt
+  - Many companies have ToS that might prohibit you from scraping (these are not laws, might not be binding and whether they can be enforced is a separate question)
+  - /robots.txt is often where guidelines are communicated to automated crawlers
+:::
+
+## ToS and Robots.txt
+
+![](media/twitter.com_en_tos.png)
+
+[Twitter ToS](https://twitter.com/en/tos#intlTerms)
+
+```html
+User-agent: *                         # the rules apply to all user agents
+Disallow: /EPiServer/CMS/             # do not crawl any URLs that start with /EPiServer/CMS/
+Disallow: /Util/                      # do not crawl any URLs that start with /Util/ 
+Disallow: /about/art-in-parliament/   # do not crawl any URLs that start with /about/art-in-parliament/
+```
+<https://www.parliament.uk/robots.txt>
+
+
+## Ethical
+
+- Are there other means available to get to the data (e.g., via an API)?
+- `robots.txt` might not be legally binding, but it is not nice to ignore it
+- Scraping can put a heavy load on a website (if you make 1000s of requests) which costs the hosts money and might bring down a site ([DDoS attack](https://en.wikipedia.org/wiki/Denial-of-service_attack))
+- Think twice before scraping personal data. You should ask yourself:
+  - is it necessary for your research?
+  - are you harming anyone by obtaining (or distributing) the data?
+  - do you really need everything or are parts of the data sufficient (e.g., can you preselect cases or ignore variables)
+
+## Advice?
+
+Legal and ethical advice is rare and complicated to give.
+A good *opinion* piece about it is @freelonAPI2018.
+It is worth reading, but can be summarised in three general pieces of advice
+
+- use authorized methods whenever possible
+- do not confuse terms of service compliance with data protection
+- understand the risks of violating terms of service
+
+# Wrap Up
+
+Save some information about the session for reproducibility.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show Session Info"
+sessionInfo()
+```
+
+# References

@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+cookies.txt
+*.mp4
+comptext_webscraping_workshop_cache/
+comptext_webscraping_workshop_files/
+data/chromote_cookies.rds
