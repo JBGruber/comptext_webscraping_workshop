@@ -1,0 +1,247 @@
+---
+title: "solutions"
+format: html
+---
+
+## Exercises: HTML selectors
+
+1. Practice finding the right selector with the CSS Diner game (<https://flukeout.github.io/>)
+2. Consider the toy HTML example below. Which selectors do you need to put into `html_elements()` (which extracts all elements matching the selector) to extract the information
+
+```{r}
+#| eval: false
+library(rvest)
+webpage <- "<html>
+<body>
+  <h1>Computational Research in the Post-API Age</h1>
+  <div class='author'>Deen Freelon</div>
+  <div>Keywords:
+    <ul>
+      <li>API</li>
+      <li>computational</li>
+      <li>Facebook</li>
+    </ul>
+  </div>
+  <div class='text'>
+    <p>Three pieces of advice on whether and how to scrape from Dan Freelon</p>
+  </div>
+  
+  <ol class='advice'>
+    <li id='one'> use authorized methods whenever possible </li>
+    <li id='two'> do not confuse terms of service compliance with data protection </li>
+    <li id='three'> understand the risks of violating terms of service </li>
+  </ol>
+
+</body>
+</html>" |> 
+  read_html()
+```
+
+```{r}
+#| eval: false
+#| echo: false
+# the headline
+headline <- html_elements(webpage, "h1")
+headline
+# the author
+author <- html_elements(webpage, ".author")
+author
+# the ordered list
+ordered_list <- html_elements(webpage, "ol")
+ordered_list
+# all bullet points
+bullet_points <- html_elements(webpage, "li")
+bullet_points
+# bullet points in unordered list
+bullet_points_unordered <- html_elements(webpage, "ul li")
+bullet_points_unordered
+# elements in ordered list
+bullet_points_ordered <- html_elements(webpage, "ol li")
+bullet_points_ordered
+# third bullet point in ordered list
+bullet_point_three_ordered <- html_elements(webpage, "#three") # alternativly "ol li:nth-child(3)"
+bullet_point_three_ordered
+```
+
+
+## Exercises: Static Web Pages 1
+
+1. Get the table with 2023 opinion polling for the next United Kingdom general election from <https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election>
+
+```{r}
+# 1. Request & collect raw html
+html <- read_html("https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election")
+
+# 2. Parse
+opinion_table <- html |>
+  html_elements(".wikitable") |> 
+  html_table() |>                
+  pluck(2)                       
+```
+
+2. Wrangle and plot the data opinion polls
+
+```{r}
+# 3. Wrangle
+opinion_tidy <- opinion_table |> 
+  pivot_longer(Con:Others, names_to = "party", values_to = "result") |> 
+  filter(!str_detect(result, fixed(".mw-parser-output"))) |> 
+  mutate(result_pct = as.integer(str_extract(result, "\\d+(?=%)")),
+         date_clean = str_extract(Datesconducted, "\\d{1,2} [A-z]{3}"),
+         date = lubridate::dmy(paste(date_clean, 2023))) |> 
+  filter(!is.na(result_pct))
+
+# Plot!
+opinion_tidy |> 
+  ggplot(aes(x = date, y = result_pct, colour = party)) +
+  geom_line() +
+  scale_color_manual(values = c(
+    "Con" = "#0086db",
+    "Lab" = "#e4003b",
+    "Lib Dems" = "#f9a61a",
+    "SNP" = "#fcf38e",
+    "Green" = "#02a95b",   
+    "Reform"  = "#12b6cf",
+    "Others" = "grey"
+  ))
+```
+
+## Exercises: Static Web Pages 2
+
+1. For extracting text, `rvest` has two functions: `html_text` and `html_text2`. Explain the difference. You can test your explanation with the example html below.
+
+```{r}
+html <- "<p>This is some text
+         some more text</p><p>A new paragraph!</p>
+         <p>Quick Question, is web scraping:
+
+         a) fun
+         b) tedious
+         c) I'm not sure yet!</p>" |> 
+  read_html()
+html |> 
+  html_text2()
+```
+
+
+
+2. How could you convert the `links` objects so that it contains actual URLs?
+
+```{r}
+paste0("https://en.wikipedia.org", links)
+glue::glue("https://en.wikipedia.org{links}")
+```
+
+3. How could you add the links we extracted above to the `pm_table` to keep everything together?
+
+```{r}
+pm_links <- tibble(name = title, link = links)
+pm_table |> 
+  mutate(pm = str_extract(`Prime ministerOffice(Lifespan)`, ".+\\["),
+         pm = str_remove(pm, "\\[")) |> 
+  select(pm) |> 
+  left_join(pm_links, by = c("pm"= "name"))
+```
+
+
+## Let's scrape! Exercise
+
+I started the code below, now it's your turn to finish it:
+
+```{r}
+#| eval: false
+# 1. Request & collect raw html
+html <- read_html("https://www.ic2s2.org/program.html")
+
+sessions <- html |> 
+  html_elements(".nav_list")
+
+# 2. Parse
+talks <- sessions |> 
+  html_elements("li")
+
+talks_titles <- talks |> 
+  html_elements("") |> 
+  html_text()
+
+talks_speaker <- talks |> 
+  html_elements("") |> 
+  html_text()
+
+talks_authors <- talks |> 
+  html_elements("") |> 
+  html_text()
+``` 
+
+## Exercises APIs
+
+This call retrieves the first 10 articles that match the query:
+
+```{r}
+library(httr2)
+response <- request("https://content.guardianapis.com") |>  # start the request with the base URL
+  req_url_path("search") |>                            # navigate to the endpoint you want to access
+  req_method("GET") |>                                 # specify the method
+  req_timeout(seconds = 60) |>                         # how long to wait for a response
+  req_headers("User-Agent" = "httr2 guardian test") |> # specify request headers
+  # req_body_json() |>                                 # since this is a GET request the body stays empty
+  req_url_query(                                       # instead the query is added to the URL
+    q = "parliament AND debate",
+    "show-blocks" = "all"
+  ) |>
+  req_url_query(                                       # in this case, the API key is also added to the query
+    "api-key" = "d187828f-9c6a-4c29-afd4-dbd43e116965" # but httr2 also has req_auth_* functions for other
+  ) |> 
+  req_perform() |> 
+  resp_body_json()
+
+View(response$response)
+```
+
+1. How can you change the call to get 25 articles instead
+
+```{r}
+response <- request("https://content.guardianapis.com") |>  # start the request with the base URL
+  req_url_path("search") |>                            # navigate to the endpoint you want to access
+  req_method("GET") |>                                 # specify the method
+  req_timeout(seconds = 60) |>                         # how long to wait for a response
+  req_headers("User-Agent" = "httr2 guardian test") |> # specify request headers
+  # req_body_json() |>                                 # since this is a GET request the body stays empty
+  req_url_query(                                       # instead the query is added to the URL
+    q = "parliament AND debate",
+    "page-size" = 25,
+    "show-blocks" = "all"
+  ) |>
+  req_url_query(                                       # in this case, the API key is also added to the query
+    "api-key" = "d187828f-9c6a-4c29-afd4-dbd43e116965" # but httr2 also has req_auth_* functions for other
+  ) |> 
+  req_perform() |> 
+  resp_body_json()
+
+View(response$response)
+```
+
+2. The call delivers the first page. How can you get to the second one?
+
+```{r}
+response2 <- request("https://content.guardianapis.com") |>  # start the request with the base URL
+  req_url_path("search") |>                            # navigate to the endpoint you want to access
+  req_method("GET") |>                                 # specify the method
+  req_timeout(seconds = 60) |>                         # how long to wait for a response
+  req_headers("User-Agent" = "httr2 guardian test") |> # specify request headers
+  # req_body_json() |>                                 # since this is a GET request the body stays empty
+  req_url_query(                                       # instead the query is added to the URL
+    q = "parliament AND debate",
+    "page-size" = 25,
+    page = 2,
+    "show-blocks" = "all"
+  ) |>
+  req_url_query(                                       # in this case, the API key is also added to the query
+    "api-key" = "d187828f-9c6a-4c29-afd4-dbd43e116965" # but httr2 also has req_auth_* functions for other
+  ) |> 
+  req_perform() |> 
+  resp_body_json()
+
+View(response2$response)
+```
+
