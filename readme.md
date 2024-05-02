@@ -40,6 +40,6 @@ rlang::check_installed("attachment")
 used_pkgs <- attachment::att_from_qmd("comptext_webscraping_workshop.qmd")
 rlang::check_installed("remotes")
 if (!rlang::is_installed("paperboy")) remotes::install_github("JBGruber/paperboy")
-if (!rlang::is_installed("traktok")) remotes::install_github("JBGruber/paperboy")
+if (!rlang::is_installed("traktok")) remotes::install_github("JBGruber/traktok")
 rlang::check_installed(used_pkgs)
 ```
